@@ -1,16 +1,16 @@
 import os
-import re
 import shutil
+import re
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.realpath(__file__))
 DEST = os.path.join(ROOT, "images")
-reImgPath = re.compile(".+[\\/]+(.+?)[\\/]+(.+?)[\\/]+(.+?)[\\/]+(.+)")
 
 DESTS = {
     "job" : "",
     "unit icon" : "",
     "unit": "",
+    "unit face" : "",
     "esper icon" : "",
     "gear" : "",
     "item" : "",
@@ -29,27 +29,32 @@ def main():
 def copy(src):
     # Unit Folder
     path = os.path.join(src, "unit")
-    IGNOR = ["_angry","_sad","_smile","_surprised","_alt"]
+    FACE = ["_angry","_sad","_smile","_surprised","_alt"]
     for root, _, files in os.walk(path):
         for f in files:
-            match = reImgPath.match(root)
-            if match[4] != "icon":
+            path, icon = os.path.split(root)
+            if icon != "icon":
                 continue
+            typ = os.path.split(os.path.split(path)[0])[1]
             sfp = os.path.join(root, f)
             # generate name
-            indicator = ""
-            if match[2] == "job":
+            indicator = None
+            if typ == "job":
                 indicator == "job"
-            elif match[2] == "unit":
-                indicator = f[-6:-3]
-                if indicator == "_m.":
-                    indicator = "unit icon"
-                elif indicator == "_s.":
-                    indicator = "esper icon"
-                elif any(x in f for x in IGNOR):
-                    continue
-                else:
+            elif typ == "unit":
+                indicator = f[:-4].rsplit('_',1)
+                if len(indicator) == 1 or re.match(r"\d+", indicator[1]):
                     indicator = "unit"
+                else:
+                    indicator = indicator[1]
+                    if indicator == "m":
+                        indicator = "unit icon"
+                    elif indicator == "s":
+                        indicator = "esper icon"
+                    else:
+                        indicator = "unit face"
+                    #elif any(x in f for x in FACE):
+                    #    indicator = "unit face"
 
             if not indicator:
                 continue
