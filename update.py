@@ -21,7 +21,7 @@ for ver in ["global", "japan"]:
 			HOST, VERSION = list(json.load(f).values())
 
 		environment = API(api = HOST.split('://',1)[1][:-1]).pass_enviroment(VERSION)
-	except KeyError:
+	except (KeyError, FileNotFoundError):
 		HOST, VERSION = update_version(APK[ver], assets)
 		environment = API(api = HOST.split('://',1)[1][:-1]).pass_enviroment(VERSION)
 

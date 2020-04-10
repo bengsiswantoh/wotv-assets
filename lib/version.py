@@ -53,6 +53,7 @@ def download_QooApp_apk(apk):
     return data
 
 def download_with_bar(url):
+    print(url)
     resp = urllib.request.urlopen(url)
     length = resp.getheader('content-length')
     if length:
@@ -72,7 +73,7 @@ def download_with_bar(url):
         buf.write(buf1)
         size += len(buf1)
         if length:
-            print(' {:.2f}\r{}'.format(size / length, url), end = '')
+            print(' {:.2f}\r'.format(size / length), end = '')
     print()
     buf.seek(0)
     return buf
