@@ -40,7 +40,7 @@ def copy(src):
             # generate name
             indicator = None
             if typ == "job":
-                indicator == "job"
+                indicator = "job"
             elif typ == "unit":
                 indicator = f[:-4].rsplit('_',1)
                 if len(indicator) == 1 or re.match(r"\d+", indicator[1]):
@@ -59,7 +59,7 @@ def copy(src):
             if not indicator:
                 continue
 
-            dfp = os.path.join(DESTS[indicator], f)
+            dfp = os.path.join(DESTS[indicator], f.replace("_01",""))
 
             if not os.path.exists(dfp):
                 if indicator == "unit":

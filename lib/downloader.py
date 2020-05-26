@@ -13,9 +13,9 @@ main_id = 2705996037
 sub_id = 515017172
 
 
-def download_all(environment, asset_dir, extract_dir):
+def download_all(environment, asset_dir, extract_dir, version_overwrite = None):
     host = environment["dlc_url"]
-    version = environment["dlc_ver"]
+    version = environment["dlc_ver"] if version_overwrite == None else version_overwrite
 
     # fetch the main package that holds meta-data about all sub dirs
     main = download(
