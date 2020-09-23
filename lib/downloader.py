@@ -74,4 +74,4 @@ def download(**kwargs):
 def get_container(data):
     am = UnityPy.load(data)
     for obj in am.container.values():
-        return json.loads(obj.read().script)
+        return json.loads(obj.read().text)

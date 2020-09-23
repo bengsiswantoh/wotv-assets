@@ -58,8 +58,8 @@ def copy(src):
 
             if not indicator:
                 continue
-
-            dfp = os.path.join(DESTS[indicator], f.replace("_01",""))
+            
+            dfp = os.path.join(DESTS[indicator], f)#.replace("_01",""))
 
             if not os.path.exists(dfp):
                 if indicator == "unit":
