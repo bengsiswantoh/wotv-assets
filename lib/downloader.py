@@ -5,6 +5,7 @@ import os
 from .api import API
 from .asset_extractor import extract_assets
 from .version import update_version
+import sys
 
 url = "{host}{version}/{system}/{package}/{id}"
 SYSTEM = "android"
@@ -63,7 +64,7 @@ def download_all(environment, asset_dir, extract_dir, version_overwrite = None):
                 try:
                     extract_assets(data, extract_dir, debug=True)
                 except:
-                    pass
+                    print(sys.exc_info()[2])
 
 
 def download(**kwargs):

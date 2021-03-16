@@ -73,16 +73,19 @@ class API(object):
 			con = http.client.HTTPSConnection(api)
 			con.connect()
 			con.request(request, url, json.dumps(body), headers)
-			res_body = con.getresponse().read()
+			res = con.getresponse()
+			res_body = res.read()
 			#print(res_body)
 			con.close()
 		except http.client.RemoteDisconnected:
 			return self.api_connect(url, body)
 		try:
-			try:
-				res_body = gzip.decompress(res_body)
-			except OSError:
-				pass
+			if res_body[0:1] != b'{':
+				try:
+					res_body = gzip.decompress(res_body)
+					print()
+				except OSError:
+					pass
 			json_res= json.loads(res_body)
 
 			if self.debug:

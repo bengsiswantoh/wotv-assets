@@ -2,8 +2,9 @@ import os
 import UnityPy
 from collections import Counter
 import zipfile
+import sys
 
-TYPES = ["Sprite", "Texture2D", "TextAsset"]
+TYPES = ["Sprite", "Texture2D", "TextAsset", "AudioClip", "Mesh"]
 IGNOR_DIR_COUNT = 2
 
 
@@ -19,7 +20,7 @@ def extract_assets(src, dst, debug=False):
 
         # check which mode we will have to use
         num_cont = sum(1 for obj in asset.container.values() if obj.type in TYPES)
-        num_objs = sum(1 for obj in asset.objects.values() if obj.type in TYPES)
+        num_objs = sum(1 for obj in asset.get_objects() if obj.type in TYPES)
 
         # check if container contains all important assets, if yes, just ignore the container
         if num_objs <= num_cont * 2:
@@ -38,7 +39,7 @@ def extract_assets(src, dst, debug=False):
                 dst, *occurence_count.most_common(1)[0][0].split("/")[IGNOR_DIR_COUNT:]
             )
 
-            for obj in asset.objects.values():
+            for obj in asset.get_objects():
                 if obj.path_id not in extracted:
                     extracted.extend(
                         export_obj(obj, local_path, append_name=True, debug=True)
@@ -89,8 +90,20 @@ def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
                     pass
             if debug and not os.path.exists(fp):
                 print(fp)
-        return [obj.path_id]
-    except Exception as e:
-        print(e, fp)
-        return []
+        
+        elif obj.type == "AudioClip":
+            for name, bdata in data.samples.items():
+                extension = ".wav"
+                fp = f"{fp}_{name}{extension}"
+                with open(fp, "wb") as f:
+                    f.write(bdata)
+            
+        elif obj.type == "Mesh":
+            extension = ".obj"
+            fp = f"{fp}{extension}"
+            with open(fp, "wt", newline = "") as f:
+                f.write(data.export())
 
+        return [obj.path_id]
+    except:
+        print(sys.exc_info()[2])
