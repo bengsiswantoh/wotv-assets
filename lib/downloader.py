@@ -31,7 +31,7 @@ def download_all(environment, asset_dir, extract_dir, version_overwrite = None):
     # iterate over all sub dirs
     for info in main:
         name = info["name"]
-        # ignore the voice overs for nw
+        # ignore the voice overs for now
         if name[:2] == "vo":
             continue
         sub = download(

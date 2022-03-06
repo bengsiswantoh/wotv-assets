@@ -1,10 +1,20 @@
 import os
 import UnityPy
 from collections import Counter
-import zipfile
 import sys
 
-TYPES = ["Sprite", "Texture2D", "TextAsset", "AudioClip", "Mesh"]
+TYPES = [
+    "MeshRenderer",
+    "SkinnedMeshRenderer",
+    "Renderer",
+    "Sprite",
+    "Texture2D",
+    "TextAsset",
+    "AudioClip",
+    "Mesh",
+    "Font",
+    "Shader",
+]
 IGNOR_DIR_COUNT = 2
 
 
@@ -13,14 +23,14 @@ def extract_assets(src, dst, debug=False):
     am = UnityPy.load(src)
 
     # iterate over assets
-    for asset in am.assets.values():
+    for asset in am.assets:
         # assets without container / internal path will be ignored for now
         if not asset.container:
             continue
 
         # check which mode we will have to use
-        num_cont = sum(1 for obj in asset.container.values() if obj.type in TYPES)
-        num_objs = sum(1 for obj in asset.get_objects() if obj.type in TYPES)
+        num_cont = sum(1 for obj in asset.container.values() if obj.type.name in TYPES)
+        num_objs = sum(1 for obj in asset.get_objects() if obj.type.name in TYPES)
 
         # check if container contains all important assets, if yes, just ignore the container
         if num_objs <= num_cont * 2:
@@ -48,28 +58,40 @@ def extract_assets(src, dst, debug=False):
 
 def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
     try:
-        if obj.type not in TYPES:
+        if obj.type.name not in TYPES:
             return []
         data = obj.read()
+        type_name = obj.type.name
+
+        if "Renderer" in type_name:
+            if append_name and data.m_GameObject:
+                name = os.path.join(fp, data.m_GameObject.read().name)
+                if os.path.split(fp)[-1] != name:
+                    fp = os.path.join(fp, name)
+            data.export(fp)
+            return [obj.path_id]
+        
         if append_name:
             fp = os.path.join(fp, data.name)
 
         fp, extension = os.path.splitext(fp)
         os.makedirs(os.path.dirname(fp), exist_ok=True)
 
-        if obj.type == "TextAsset":
+        if type_name == "TextAsset":
             if not extension:
                 extension = ".txt"
             fp = f"{fp}{extension}"
+
             with open(fp, "wb") as f:
                 f.write(data.script)
 
             if debug and not os.path.exists(fp):
                 print(fp)
 
-        elif obj.type == "Sprite":
+        elif type_name == "Sprite":
             extension = ".png"
             fp = f"{fp}{extension}"
+            print("Saving Sprite to: ", fp)
             data.image.save(fp)
             if debug and not os.path.exists(fp):
                 print(fp)
@@ -80,30 +102,41 @@ def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
                 getattr(data.m_RD.alphaTexture, "path_id", None),
             ]
 
-        elif obj.type == "Texture2D":
+        elif type_name == "Texture2D":
             extension = ".png"
             fp = f"{fp}{extension}"
             if not os.path.exists(fp):
-                try:
-                    data.image.save(fp)
-                except EOFError:
-                    pass
+                print("Saving Texture2D to: ", fp)
+                data.image.save(fp)
             if debug and not os.path.exists(fp):
                 print(fp)
-        
-        elif obj.type == "AudioClip":
+
+        elif type_name == "AudioClip":
             for name, bdata in data.samples.items():
                 extension = ".wav"
                 fp = f"{fp}_{name}{extension}"
                 with open(fp, "wb") as f:
                     f.write(bdata)
-            
-        elif obj.type == "Mesh":
+
+        elif type_name == "Mesh":
             extension = ".obj"
             fp = f"{fp}{extension}"
-            with open(fp, "wt", newline = "") as f:
+            with open(fp, "wt", encoding="utf8", newline="") as f:
+                f.write(data.export())
+
+        elif type_name == "Font":
+            if data.m_FontData:
+                extension = ".ttf"
+                if data.m_FontData[0:4] == b"OTTO":
+                    extension = ".otf"
+                with open(f"{fp}{extension}", "wb") as f:
+                    f.write(data.m_FontData)
+
+        elif type_name == "Shader":
+            extension = ".txt"
+            with open(f"{fp}{extension}", "wt", encoding="utf8", newline="") as f:
                 f.write(data.export())
 
         return [obj.path_id]
     except:
-        print(sys.exc_info()[2])
+        print(sys.exc_info())
