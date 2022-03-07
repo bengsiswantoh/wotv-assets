@@ -11,7 +11,7 @@ TYPES = [
     "Texture2D",
     "TextAsset",
     "AudioClip",
-    "Mesh",
+    #"Mesh", - replaced by Renderer export
     "Font",
     "Shader",
 ]
