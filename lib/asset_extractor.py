@@ -70,7 +70,7 @@ def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
                     fp = os.path.join(fp, name)
             data.export(fp)
             return [obj.path_id]
-        
+
         if append_name:
             fp = os.path.join(fp, data.name)
 
@@ -85,16 +85,10 @@ def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
             with open(fp, "wb") as f:
                 f.write(data.script)
 
-            if debug and not os.path.exists(fp):
-                print(fp)
-
         elif type_name == "Sprite":
             extension = ".png"
             fp = f"{fp}{extension}"
-            print("Saving Sprite to: ", fp)
             data.image.save(fp)
-            if debug and not os.path.exists(fp):
-                print(fp)
 
             return [
                 obj.path_id,
@@ -106,10 +100,7 @@ def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
             extension = ".png"
             fp = f"{fp}{extension}"
             if not os.path.exists(fp):
-                print("Saving Texture2D to: ", fp)
                 data.image.save(fp)
-            if debug and not os.path.exists(fp):
-                print(fp)
 
         elif type_name == "AudioClip":
             for name, bdata in data.samples.items():
@@ -140,3 +131,4 @@ def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
         return [obj.path_id]
     except:
         print(sys.exc_info())
+        return []

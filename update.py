@@ -25,7 +25,7 @@ for ver, apk in VERSION:
         environment = API(api=HOST.split("://", 1)[1][:-1]).pass_enviroment(VERSION)
     except (KeyError, FileNotFoundError):
         HOST, VERSION, SHARED_KEY = update_version(apk, assets)
-        encryption_helper.a_shared_key = b64decode(SHARED_KEY)
+        encryption_helper.a_shared_key = SHARED_KEY
         environment = API(api=HOST.split("://", 1)[1][:-1]).pass_enviroment(VERSION)
 
     download_all(environment, assets, extract)
