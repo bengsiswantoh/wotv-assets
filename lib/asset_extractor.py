@@ -80,8 +80,9 @@ def export_obj(obj, fp: str, append_name: bool = False, debug=False) -> list:
         if type_name == "TextAsset":
             if not extension:
                 extension = ".txt"
+            # small hack to fix decryption
+            fp = os.path.join(os.path.basename(fp), os.path.splitext(data.name)[0])
             fp = f"{fp}{extension}"
-
             with open(fp, "wb") as f:
                 f.write(data.script)
 
