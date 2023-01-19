@@ -14,7 +14,6 @@ reVersion = re.compile(b"\x00([^\x00]+?:googleplay)\x00")
 
 
 def update_version(id, path=""):
-    # download & save latest apk from QooApp
     apk_buf = download_QooApp_apk(id)
 
     fp = os.path.join(path, id)
@@ -23,12 +22,20 @@ def update_version(id, path=""):
         f.write(apk_buf.read())
         apk_buf.seek(0)
 
-    # extract the version
-    z = zipfile.ZipFile(apk_buf)
+    HOST, VERSION, SHARED_KEY = extract_version(id, path)
 
-    for f in z.namelist():
-        if f[:16] == "assets/bin/Data/":
-            data = z.open(f).read()
+    return HOST, VERSION, SHARED_KEY
+
+def extract_version(id, path=""):
+    fp = os.path.join(path, id)
+
+    apk = open(fp, 'rb')
+
+    zip = zipfile.ZipFile(apk)
+
+    for name in zip.namelist():
+        if name[:16] == "assets/bin/Data/":
+            data = zip.open(name).read()
             host = reHost.findall(data)
             version = reVersion.findall(data)
 
@@ -37,39 +44,15 @@ def update_version(id, path=""):
 
     HOST = host[0].decode("utf8")
     VERSION = version[0].decode("utf8")
-    SHARED_KEY = dump_shared_key(z)
-    z.close()
-    # save it
-    fp = os.path.join(path, "version.json")
-    with open(fp, "wt", encoding="utf8") as f:
-        json.dump(
-            {
-                "host": HOST,
-                "version": VERSION,
-                "shared_key": b64encode(SHARED_KEY).decode("utf8"),
-            },
-            f,
-            ensure_ascii=False,
-            indent="\t",
-        )
+    SHARED_KEY = dump_shared_key(zip)
+    zip.close()
 
     return HOST, VERSION, SHARED_KEY
-
-
-def load_version_consts(path):
-    with open(os.path.join(path, "version.json"), "rt", encoding="utf8") as f:
-        data = json.load(f)
-    return data["host"], data["version"], b64decode(data["shared_key"])
-
 
 def dump_shared_key(zip):
     import UnityPy
     from UnityPy.classes import PPtr
-    from UnityPy.export import Texture2DConverter
 
-    # from zipfile import ZipFile
-
-    # zip = ZipFile(apk_fp)
     env = UnityPy.Environment()
     for name in zip.namelist():
         if name.startswith("assets/"):
@@ -87,7 +70,6 @@ def dump_shared_key(zip):
                 reader.reader.Position = mb._raw_offset
                 texture2D = PPtr(reader).read()
                 shared_key = get_shared_key(texture2D.image)
-    # zip.close()
     return shared_key
 
 
@@ -134,12 +116,7 @@ def download_QooApp_apk(apk):
             method="GET",
         )
     )
-    # con = http.client.HTTPSConnection('api.qoo-app.com')
-    # con.connect()
-    # con.request("GET", f'/v6/apps/{apk}/download?supported_abis=x86,Carmeabi-v7a,Carmeab')
-    # res = con.getresponse()
-    # con.close()
-    # download_url = res.headers['Location']
+
     data = download_with_bar(res.url)
     return data
 
@@ -153,8 +130,6 @@ def download_with_bar(url):
         blocksize = max(4096, length // 100)
     else:
         blocksize = 1000000  # just made something up
-
-    # print(length, blocksize)
 
     buf = io.BytesIO()
     size = 0
